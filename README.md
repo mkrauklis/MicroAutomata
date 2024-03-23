@@ -90,6 +90,7 @@ The introduction of a phage often places pressure on systems to exhibit new beha
 * UI enhancements.
 * Make the visualization optional.
 * Introduce a headless "tournament-style" mode.
+* Develop characterizations framework (greedy, nice, neighborly, agressive).
 
 # Technology
 * [p5.js](https://p5js.org/)
