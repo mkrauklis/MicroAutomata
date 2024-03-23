@@ -105,6 +105,7 @@ This example is a more complicated example, showing a longer timeframe with a mo
 The introduction of a phage often places pressure on systems to exhibit new behavior. For example, a common pattern when pressured by a phage is to favor mutations that produce less-healthy offspring. Counterintuitively, this helps prevent the spread of a voracious phage as the weaker hosts die off before the phage can reproduce.
 
 # Future Enhancements
+* Add the ability to follow a bacteria (see its activation inputs and outputs).
 * Neural Nets for the phages.
 * Neural Nets for food.
 * Ability to recognize relatives.
@@ -112,6 +113,8 @@ The introduction of a phage often places pressure on systems to exhibit new beha
 * Make the visualization optional.
 * Introduce a headless "tournament-style" mode.
 * Develop characterizations framework (greedy, nice, neighborly, agressive).
+* Develop a loss function and introduce a gradient-descent optimized evolution. Possibly a random bacterial variant that has this turned on.
+* Possibly introduce NN structural variants: RNN & CNN.
 
 # Technology
 * [p5.js](https://p5js.org/)
