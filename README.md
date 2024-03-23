@@ -99,6 +99,7 @@ This example is a more complicated example, showing a longer timeframe with a mo
 ![Evolution Example 2](README_MEDIA/lineage_visualization_seasons2.png)
 
 ![Evolution Example 2 - Field](README_MEDIA/lineage_visualization_seasons2_field.png)
+*Sub-Sub-Sub-Sub-Species 15->84->190->504->578 and the phage*
 
 ### Phage Infection
 The introduction of a phage often places pressure on systems to exhibit new behavior. For example, a common pattern when pressured by a phage is to favor mutations that produce less-healthy offspring. Counterintuitively, this helps prevent the spread of a voracious phage as the weaker hosts die off before the phage can reproduce.

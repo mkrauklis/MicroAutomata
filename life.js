@@ -12,6 +12,8 @@ function requireScript(script) {
   });
 }
 requireScript('neuralNetwork.js')
+requireScript('bacterialNeuralNetwork.js')
+requireScript('neuralNetworkVisualizer.js')
 
 var canvasFooter = 300;
 var canvasHeight;
@@ -43,106 +45,6 @@ var inputTypes = ['Food', 'Bacteria', 'Phage', 'Wall', 'None'];
 var inputType = 1; // Default to Bacteria
 
 var reproductionDirections = ['UpLeft', 'Up', 'UpRight', 'Left', 'Right', 'DownLeft', 'Down', 'DownRight']
-
-let nnHistoryTicks = -1
-let nnHistory = {}
-let nnHistoryGranularity = 20
-function updateNNHistory(){
-  nnHistoryTicks++
-  
-  if(nnHistoryTicks % nnHistoryGranularity != 0){
-    return;
-  }
-  
-  let nnHistoryAtTick = {}
-  for (var col = 0; col < gridColRows.length; col++) {
-    for (var row = 0; row < gridColRows[col].length; row++) {
-      if (gridColRows[col][row].bacterialnn) {
-        nnID = gridColRows[col][row].bacterialnn.nn.id
-
-        // Add lineage to id separated by .
-        for (var i = 0; i < gridColRows[col][row].bacterialnn.nn.lineage.length; i++) {
-          nnID += '->' + gridColRows[col][row].bacterialnn.nn.lineage[i]
-        }
-
-        if (!nnHistoryAtTick[nnID]) {
-          nnHistoryAtTick[nnID] = 1
-        }
-        else {
-          nnHistoryAtTick[nnID] += 1
-        }
-      }
-    }
-  }
-  nnHistory[nnHistoryTicks] = nnHistoryAtTick
-
-  // Remove any keys that have a value of 1
-  for (var key in nnHistoryAtTick) {
-    if (nnHistoryAtTick[key] == 1) {
-      delete nnHistoryAtTick[key]
-    }
-  }
-
-  if(nnHistoryTicks % 2000 == 0){
-    // Print as json
-    //print(JSON.stringify(nnHistory))
-  }
-  
-  // Redraw the graph
-  drawNNHistoryGraph()
-}
-
-class BacterialNN {
-  // ## Neural Network Inputs ##
-  // Food
-  // Health
-  // Is Infected
-  // Number of Neighbors
-  // Number of Infected Neighbors
-
-  // ## Neural Network Outputs ##
-  // Eating Rate
-  // Cost of Reproduction
-  // Chance of Reproduction
-  // Should Kill to Reproduce
-
-  // NN Topology, fully feed forward connected 5/7/7/3
-  constructor(copyFrom, isReproduction = false) {
-    this.topology = copyFrom ? copyFrom.topology : this.generateRandomBacterialTopology()
-    this.nn = new NNetwork(this.topology, copyFrom ? copyFrom.nn : null, isReproduction)
-  }
-
-  generateRandomBacterialTopology(){
-    // Always start with 5 and end with 4
-    let topology = [5]
-
-    let hiddenLayerCount = int(random(1,5))
-    for (var i = 0; i < hiddenLayerCount; i++) {
-      topology.push(int(random(3,10)))
-    }
-
-    topology.push(4)
-
-    return topology
-  }
-
-  // Returns an array of 3 floats and a boolean representing the outputs of the NN
-  executeNN(food, health, isInfected, numNeighborsDividedBy9, numInfectedNeighborsDividedBy9) {
-    this.nn.layers[0].neurons[0].output = food
-    this.nn.layers[0].neurons[1].output = health
-    this.nn.layers[0].neurons[2].output = isInfected
-    this.nn.layers[0].neurons[3].output = numNeighborsDividedBy9
-    this.nn.layers[0].neurons[4].output = numInfectedNeighborsDividedBy9
-
-    for (var i = 1; i < this.nn.layers.length; i++) {
-      this.nn.layers[i].activate()
-    }
-
-    let outputLayerNeurons = this.nn.layers[this.nn.layers.length - 1].neurons
-
-    return [outputLayerNeurons[0].outputToZeroOneRange(), outputLayerNeurons[1].outputToZeroOneRange(), outputLayerNeurons[2].outputToZeroOneRange(), outputLayerNeurons[3].output > 0.0]
-  }
-}
 
 class State {
   update(food, bacteria, phage, wall, bacterialnn = null) {
@@ -198,11 +100,11 @@ function iterateState() {
     }
   }
 
-  updateNNHistory()
+  nnVizUpdateNNHistory()
+  nnVizDrawNNHistoryGraph('nnHistoryGraph')
 }
 
 function getNeighborhood(col, row, gridColRows) {
-  //print('getting neighborhood for '+col+','+row)
   col--;
   row--;
   if (col < 0) {
@@ -223,7 +125,6 @@ function getNeighborhood(col, row, gridColRows) {
       colPlusOffset = (col + colOffset) % gridColRows.length
       rowPlusOffset = (row + rowOffset) % gridColRows[col].length
       neighborhood[colOffset][rowOffset] = gridColRows[colPlusOffset][rowPlusOffset]
-      //print('['+colPlusOffset+']['+rowPlusOffset+']')
     }
   }
 
@@ -454,55 +355,6 @@ function setup() {
 
   createConfigComponents();
 }
-  
-function drawNNHistoryGraph(){
-  let data = nnHistory
-  let df = []
-  for (var tick in data) {
-    for (var nnid in data[tick]) {
-      df.push({'tick':tick, 'neural_net_id':nnid, 'count':data[tick][nnid]})
-    }
-  }
-
-  // We should have a DF that is an an array of objects with tick, neural_net_id, and count
-
-  // Plotly Plot the neural_net_id vs tick in a stacked area chart
-  // tick is the x axis
-  // count is the y axis
-  // neural_net_id is the stack
-
-  // Pivot the data to an array of objects where ticks are the x axis, y axis is the count, and the stackgroup is the neural_net_id
-  // Iterate over each distinct neural_net_id and create a trace for each
-  let traces = []
-  let neural_net_ids = [...new Set(df.map(x => x.neural_net_id))]
-  for (var i = 0; i < neural_net_ids.length; i++) {
-    let neural_net_id = neural_net_ids[i]
-    let trace = {
-      x: df.filter(x => x.neural_net_id == neural_net_id).map(x => x.tick),
-      y: df.filter(x => x.neural_net_id == neural_net_id).map(x => x.count),
-      stackgroup: 'one',
-      name: neural_net_id,
-      mode: 'lines',
-      line: {width: 0.5},
-      fill: 'tonexty'
-    }
-    traces.push(trace)
-  }
-
-  // Draw the lines as a spline
-  let layout = {
-    title: 'Neural Net History',
-    xaxis: {
-      title: 'Tick'
-    },
-    yaxis: {
-      title: 'Count'
-    },
-    showlegend: true
-  }
-
-  Plotly.newPlot('nnHistoryGraph', traces, layout)
-}
 
 let foodGrowthRateSlider;
 let phageEatingRateSlider;
@@ -608,7 +460,6 @@ function draw() {
   hovered_cell = findCellFromXY(mouseX, mouseY, gridColRows);
   if (hovered_cell) {
     if (hovered_cell.bacterialnn) {
-      //printBacterialNNScenarios(hovered_cell.bacterialnn)
       hoveredBacterialNeuralNetworkId = hovered_cell.bacterialnn.nn.id;
       hoveredBacterialNeuralNetworkLineage = hovered_cell.bacterialnn.nn.lineage;
     }
@@ -739,7 +590,7 @@ function draw() {
 
     if(matchingNN){
       offsetCount++;
-      printNN(matchingNN, 5, canvasHeight + (offset * offsetCount), neuralNetDisplayWidth, neuralNetDisplayHeight)
+      nnVizPrintNNNeuralNetwork(matchingNN, 5, canvasHeight + (offset * offsetCount), neuralNetDisplayWidth, neuralNetDisplayHeight)
     }
   }
 }
@@ -767,59 +618,6 @@ function printBacterialNNScenario(scenarioName, bnn, food, health, isInfected, n
   print('Bacterial NN Scenario - '+scenarioName+'\ninputs: food[' + food + '], health[' + health + '], isInfected[' + isInfected + '], numNeighbors[' + numNeighbors + '], numInfectedNeighbors[' + numInfectedNeighbors + ']')
   outputs = bnn.executeNN(food, health, isInfected, numNeighbors/9, numInfectedNeighbors/9)
   print('outputs: eatingRate[' + outputs[0] + '], costOfReproduction[' + outputs[1] + '], chanceOfReproduction[' + outputs[2] + '], shouldKillToReproduce[' + outputs[3] + ']')
-}
-
-function printNN(nn, x, y, width, height){
-  // Determine the grid size by getting the widest layer node count and the total number of layers
-  let gridHeight = 0
-  for (let i = 0; i < nn.layers.length; i++) {
-    gridHeight = max(gridHeight, nn.layers[i].neurons.length)
-  }
-  let gridWidth = nn.layers.length
-
-  // Our grid is going to be a rectangle of width widestLayer and height gridHeight
-  let cellWidth = width / gridWidth
-  let cellHeight = height / gridHeight
-
-  // Calculate the y-offset for each layer so they are centered
-  let yOffsetsForLayers = []
-  for (let i = 0; i < nn.layers.length; i++) {
-    yOffsetsForLayers.push((gridHeight - nn.layers[i].neurons.length) / 2 * cellHeight)
-  }
-
-  // Make the node width 1/2 the size of either the cellWidth or cellHeight, which ever is smaller
-  let nodeSize = max(min(cellWidth, cellHeight) / 2, 1)
-
-  // Draw the edges first, starting at the second to left most layer and working to the left
-  // Each layer references the previous layer as inputs so don't draw edges for the first layer
-  // The color of each edge should be black-to-light-gray based on the weight
-  for (let i = 1; i < nn.layers.length; i++) {
-    for (let j = 0; j < nn.layers[i].neurons.length; j++) {
-      for (let k = 0; k < nn.layers[i - 1].neurons.length; k++) {
-        let y1offset = yOffsetsForLayers[i - 1]
-        let y2offset = yOffsetsForLayers[i]
-        // Draw the edge
-        colorComponent = 100 * (nn.layers[i].neurons[j].weights[k] + 1);
-        stroke(color(colorComponent, colorComponent, colorComponent))
-        strokeWeight(1)
-        // Draw the line, taking into account the y-offsets
-        line(x + ((i - 1) * cellWidth) + (cellWidth / 2), y + (k * cellHeight) + (cellHeight / 2) + y1offset, x + (i * cellWidth) + (cellWidth / 2), y + (j * cellHeight) + (cellHeight / 2) + y2offset)
-      }
-    }
-  }
-
-  // Draw the nodes, working left to right and top to bottom, starting at the first layer and working to the right
-  // The color of each node should be black-to-light-gray based on the bias
-  for (let i = 0; i < nn.layers.length; i++) {
-    for (let j = 0; j < nn.layers[i].neurons.length; j++) {
-      let yoffset = yOffsetsForLayers[i]
-      colorComponent = 100 * (nn.layers[i].neurons[j].bias + 1);
-      fill(color(colorComponent, colorComponent, colorComponent))
-      stroke('black')
-      strokeWeight(1)
-      circle(x + (i * cellWidth) + (cellWidth / 2), y + (j * cellHeight) + (cellHeight / 2) + yoffset, nodeSize)
-    }
-  }
 }
 
 function compareArrays(array1, array2) {
