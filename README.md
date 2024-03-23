@@ -3,6 +3,10 @@
 ![Mature Field](README_MEDIA/field_complex.png)
 
 ## Description
+**NB**: This project is built on the p5.js framework. See `Technology` below for links.
+
+To experiment live, see: [Micro Automata on p5.js](https://editor.p5js.org/mkrauklis/sketches/8rOq0sw2F)
+
 This project aims to extend upon the ideas of [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) by creating a simulation much closer to true microbial life. The simulation allows for 4 cell types: food (green), bacteria (blue), and viral phages that attack the bacteria (red). I implemented a preliminary version of this concept in 2012 on Android; see: [MicroLife](https://github.com/mkrauklis/MicroLife). This implementation is a from-the-ground-up-port to JS as to make it available in the browser. It also incorporates several new concepts:
 * Neural Networks - Bacteria operate on a neural net that takes inputs (avalable food, current health, if it's infected by a phage, how many neighboring bacteria there are, and how many of those neighbors are infected by phages) and generates behavioral outputs (eating rate, cost of reproduction and health of offspring {costlier reproduction produces healthier offspring}, and if the bacteria should kill neighbors to reproduce).
   * The neural nets are randomly structured with between 3 and 7 layers, each hidden layer having between 3 and 10 neurons.
@@ -71,13 +75,13 @@ As this creates output values in a quasi-Gaussian distribution centered around 0
 ## Bacterial Lineage Visualization
 ![Lineage Visualization](README_MEDIA/lineage_visualization.png)
 
-# Interesting Observations
+# Observations
 ## Evolutionary Pressure
 ### Seasons
-TODO
+Seasons introduce evolutionary pressure by changing the amount of food available to be consumed by the bacteria. Often bacterial species will simply die out during this period. Some go into hibernation. Some exhibit a ravenous sparse behavior, where they move quickly but don't reproduce in all directions as to consume as much food as possible while leaving a trail of wasteland behind them. In some circumstances a mutation introduces a variant in behavior that creates one of these behaviors, making the bacterial species more resilient than it previously was.
 
 ### Phage Infection
-TODO
+The introduction of a phage often places pressure on systems to exhibit new behavior. For example, a common pattern when pressured by a phage is to favor mutations that produce less-healthy offspring. Counterintuitively, this helps prevent the spread of a voracious phage as the weaker hosts die off before the phage can reproduce.
 
 # Future Enhancements
 * Neural Nets for the phages.
