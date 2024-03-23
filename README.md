@@ -80,6 +80,26 @@ As this creates output values in a quasi-Gaussian distribution centered around 0
 ### Seasons
 Seasons introduce evolutionary pressure by changing the amount of food available to be consumed by the bacteria. Often bacterial species will simply die out during this period. Some go into hibernation. Some exhibit a ravenous sparse behavior, where they move quickly but don't reproduce in all directions as to consume as much food as possible while leaving a trail of wasteland behind them. In some circumstances a mutation introduces a variant in behavior that creates one of these behaviors, making the bacterial species more resilient than it previously was.
 
+Example 1:
+
+This simulation starts with three bacterial species (bacteria that never exceed a populatoin of 1 are not represented): 2, 4, and 8. Species 4 doesn't last long, but Species 2 and Species 8 begin to grow. Eventually, Species 2 and Species 8 run into one another and Species 8 quickly overtakes Species 2, leaving Species 8 as the sole remaining species.
+
+Species 8 then grows to fill the entire field through Summer and into Fall. The population dips in Fall/Winter, but rebounds in Spring. However, in Spring a mutation of Species 8 makes an appearance: Sub-Species 8->37. While there is space to grow Sub-Species 8->37 grows, but once the field is again saturated Species 8 out-competes Sub-Species 8->37 and if the time of abundance continued it seems likely Sub-Species 8->37 would have gone extinct. However, come Fall/Winter Species 8 dies back leaving space for Sub-Species 8->37 to grow.
+
+Species 8, with its lower population isn't able to pressure Sub-Species 8->37 during the third Summer/Fall and the competition is a stalemate. However, come the third winter, Sub-Species 8->37 is able to out-compete in the time of scarsity and pushes Species 8 to extinction.
+
+Dozens of other sub-species and sub-sub-species can be seen that don't out-compete the dominant species, never gaining a foothold.
+
+![Evolution Example 1](README_MEDIA/lineage_visualization_seasons.png)
+
+Example 2:
+
+This example is a more complicated example, showing a longer timeframe with a more complicated lineage. Note, this all originated from an oringal seed of bacteria. All sub-species are descendents of a single bacteria, Species 15. A phage was introduced at Tick 4000 and another at Tick 6000. By the end of the simulation a 5th generation descendent of Species 15, Sub-Sub-Sub-Sub-Species 15->84->190->504->578 was the only remaining variant.
+
+![Evolution Example 2](README_MEDIA/lineage_visualization_seasons2.png)
+
+![Evolution Example 2 - Field](README_MEDIA/lineage_visualization_seasons2_field.png)
+
 ### Phage Infection
 The introduction of a phage often places pressure on systems to exhibit new behavior. For example, a common pattern when pressured by a phage is to favor mutations that produce less-healthy offspring. Counterintuitively, this helps prevent the spread of a voracious phage as the weaker hosts die off before the phage can reproduce.
 
