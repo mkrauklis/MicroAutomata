@@ -42,7 +42,7 @@ Walls cannot be traversed by bacteria nor phage, however a diagional gap can pot
 The simulation will oscilate through sinoidal seasons centered around the `Food: Growth Rate` slider. Summer has the most abundant food while winter has the least.
 
 ## Drawing Type
-Drawing types (food, bacteria, phage, wall, none) can be changed by mouse-scrolling or by clicking the `Update Drawing Type` button.
+Drawing types (food, bacteria, phage, wall, none) can be changed by mouse-scrolling.
 
 ![Drawing Types](README_MEDIA/drawing_type.png)
 

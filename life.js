@@ -15,10 +15,11 @@ requireScript('neuralNetwork.js')
 requireScript('bacterialNeuralNetwork.js')
 requireScript('neuralNetworkVisualizer.js')
 
-var canvasFooter = 300;
+var canvasFooter = 200;
 var canvasHeight;
 var canvasWidth;
 var cellSize = 20;
+var newCellSize = cellSize;
 var theFrameRate = 100;
 var cellStroke = 0.25;
 var neuralNetDisplayHeight = 150;
@@ -85,13 +86,13 @@ class State {
 
 function iterateState() {
   seasonalTicker += seasonalTicksPerFrame
-  
   // Handle Seasons
   // var seasonalVariation = 0.1
   // var seasonalDuration = 1000
   // var seasonalTicksPerFrame = 1
-  let localFoodGrowthRate = max(0,foodGrowthRate + (seasonalVariation*sin(2*PI*seasonalTicker/seasonalDuration)))
-  
+  let seasonalAdjustment = seasonalVariation*sin(2*PI*seasonalTicker/seasonalDuration)
+  let localFoodGrowthRate = max(0,foodGrowthRate + seasonalAdjustment)
+
   for (var col = 0; col < gridColRows.length; col++) {
     for (var row = 0; row < gridColRows[col].length; row++) {
       cellToday = gridColRows[col][row];
@@ -327,7 +328,7 @@ function findCellFromXY(x, y, grid) {
 
 function secondarySetup(){
   canvasHeight = windowHeight - canvasFooter;
-  canvasWidth = windowWidth;
+  canvasWidth = windowWidth - 85;
   cols = int(canvasWidth / cellSize);
   rows = int(canvasHeight / cellSize);
   gridColRows = new Array(cols)
@@ -347,67 +348,11 @@ function secondarySetup(){
 
 function setup() {
   canvasHeight = windowHeight - canvasFooter;
-  canvasWidth = windowWidth;
+  canvasWidth = windowWidth - 85;
   createCanvas(canvasWidth, canvasHeight + canvasFooter, document.getElementById('myCanvas'));
   frameRate(theFrameRate)
 
   secondarySetup()
-
-  createConfigComponents();
-}
-
-let foodGrowthRateSlider;
-let phageEatingRateSlider;
-let phageSpreadThresholdSlider;
-let phageChanceOfSpreadSlider;
-let theFrameRateSlider;
-let cellSizeSlider;
-function createConfigComponents() {
-  const offset = 17;
-
-  let fakeUpdateDrawingTypeButton = createButton('Update Drawing Type')
-  fakeUpdateDrawingTypeButton.position(150, canvasHeight)
-
-  let offsetCount = 1;
-  foodGrowthRateSlider = createSlider(0, 100, foodGrowthRate * 100, 1)
-  foodGrowthRateSlider.position(5, canvasHeight + 3 + (offset * offsetCount))
-  foodGrowthRateSlider.size(200)
-  text('Food: Growth Rate', 210, canvasHeight + offset + (offset * offsetCount))
-
-  offsetCount++;
-  phageEatingRateSlider = createSlider(0, 100, phageEatingRate * 100, 1)
-  phageEatingRateSlider.position(5, canvasHeight + 3 + (offset * offsetCount))
-  phageEatingRateSlider.size(200)
-  text('Phage: Voracity', 210, canvasHeight + offset + (offset * offsetCount))
-
-  offsetCount++;
-  phageSpreadThresholdSlider = createSlider(0, 100, phageSpreadThreshold * 100, 1)
-  phageSpreadThresholdSlider.position(5, canvasHeight + 3 + (offset * offsetCount))
-  phageSpreadThresholdSlider.size(200)
-  text('Phage: Spread Threshold', 210, canvasHeight + offset + (offset * offsetCount))
-
-  offsetCount++;
-  phageChanceOfSpreadSlider = createSlider(0, 100, phageChanceOfSpread * 100, 1)
-  phageChanceOfSpreadSlider.position(5, canvasHeight + 3 + (offset * offsetCount))
-  phageChanceOfSpreadSlider.size(200)
-  text('Phage: Chance of Spread', 210, canvasHeight + offset + (offset * offsetCount))
-
-  offsetCount++;
-  theFrameRateSlider = createSlider(1, 100, theFrameRate, 1)
-  theFrameRateSlider.position(5, canvasHeight + 3 + (offset * offsetCount))
-  theFrameRateSlider.size(200)
-  text('Frame Rate', 210, canvasHeight + offset + (offset * offsetCount))
-
-  // offsetCount++;
-  // drawGridCheckbox = createCheckbox();
-  // drawGridCheckbox.position(5, canvasHeight + 3 + (offset * offsetCount))
-  // text('Show Grid', 25, canvasHeight + offset + (offset * offsetCount))
-
-  offsetCount++;
-  cellSizeSlider = createSlider(1, 100, cellSize, 1)
-  cellSizeSlider.position(5, canvasHeight + 3 + (offset * offsetCount))
-  cellSizeSlider.size(200)
-  text('Cell Size (Resets)', 210, canvasHeight + offset + (offset * offsetCount))
 }
 
 function draw() {
@@ -418,22 +363,13 @@ function draw() {
   const offset = 17;
   let highlightMutatedCells = false;
 
-  foodGrowthRate = foodGrowthRateSlider.value() / 100.0;
-  //   bacteriaEatingRate = bacteriaEatingRateSlider.value()/100.0;
-  //   bacteriaCostOfReproduction = bacteriaCostOfReproductionSlider.value()/100.0;
-  //   bacteriaChanceOfReproduction = bacteriaChanceOfReproductionSlider.value()/100.0;
-  phageEatingRate = phageEatingRateSlider.value() / 100.0;
-  phageSpreadThreshold = phageSpreadThresholdSlider.value() / 100.0;
-  phageChanceOfSpread = phageChanceOfSpreadSlider.value() / 100.0;
-  theNewFrameRate = theFrameRateSlider.value();
-
   if (theFrameRate != theNewFrameRate) {
     frameRate(theNewFrameRate);
     theFrameRate = theNewFrameRate;
   }
 
-  if (cellSize != cellSizeSlider.value()) {
-    cellSize = cellSizeSlider.value()
+  if (cellSize != newCellSize) {
+    cellSize = newCellSize
     secondarySetup()
   }
 
@@ -466,18 +402,16 @@ function draw() {
   }
   else {
     // See if we are mousing over one of the Bacteria Species descriptions as defined below
-    let textSpacing = 14
-    if(mouseX > 380 && mouseX < 580){
-      if(mouseY > canvasHeight){
-        let speciesIndex = int((mouseY - (canvasHeight + textSpacing)) / textSpacing) - 2
-        let nnCountsKeys = Object.keys(nnCounts)
-        if(speciesIndex >= 0 && speciesIndex < nnCountsKeys.length){
-          hoveredBacterialNeuralNetworkId = nnCountsKeys[speciesIndex]
-          hoveredBacterialNeuralNetworkLineage = []
-        }
-        else if(speciesIndex < 0){ // Means the mouse is hovering over the mutation count
-          highlightMutatedCells = true;
-        }
+    let textSpacing = 12
+    if(mouseY > canvasHeight + 39){
+      let speciesIndex = int((mouseY - (canvasHeight + 39)) / textSpacing) - 2
+      let nnCountsKeys = Object.keys(nnCounts)
+      if(speciesIndex >= 0 && speciesIndex < nnCountsKeys.length){
+        hoveredBacterialNeuralNetworkId = nnCountsKeys[speciesIndex]
+        hoveredBacterialNeuralNetworkLineage = []
+      }
+      else if(speciesIndex < 0){ // Means the mouse is hovering over the mutation count
+        highlightMutatedCells = true;
       }
     }
   }
@@ -530,8 +464,8 @@ function draw() {
     season = 'Winter';
   }
   
-  text('Season: ' + season, 5, canvasHeight)
-  text('Drawing Type: ' + inputTypes[inputType], 5, canvasHeight + 17)
+  text('Season: ' + season, 5, canvasHeight + 10)
+  text('Drawing Type: ' + inputTypes[inputType], 5, canvasHeight + 25)
 
   // print the counts in human readable form
   let species_text = 'Mutation Count: ' + nnMutationCount + '\nBacteria Species:'
@@ -542,37 +476,7 @@ function draw() {
     }
   }
 
-  text(species_text, 380, canvasHeight + 17)
-
-  let offsetCount = 2;
-  text('Food: Growth Rate', 210, canvasHeight + (offset * offsetCount))
-
-  //   offsetCount++;
-  //   text('Bacteria: Eating Rate', 210, canvasHeight + (offset*offsetCount))
-
-  //   offsetCount++;
-  //   text('Bacteria: Cost of Reproduction', 210, canvasHeight + (offset*offsetCount))
-
-  //   offsetCount++;
-  //   text('Bacteria: Chance of Reproduction', 210, canvasHeight + (offset*offsetCount))
-
-  offsetCount++;
-  text('Phage: Voracity', 210, canvasHeight + (offset * offsetCount))
-
-  offsetCount++;
-  text('Phage: Spread Threshold', 210, canvasHeight + (offset * offsetCount))
-
-  offsetCount++;
-  text('Phage: Chance of Spread', 210, canvasHeight + (offset * offsetCount))
-
-  offsetCount++;
-  text('Frame Rate', 210, canvasHeight + (offset * offsetCount))
-
-  // offsetCount++;
-  // text('Show Grid', 25, canvasHeight + (offset * offsetCount))
-
-  offsetCount++;
-  text('Cell Size (Resets)', 210, canvasHeight + (offset * offsetCount))
+  text(species_text, 5, canvasHeight + 39)
 
   if(hoveredBacterialNeuralNetworkId){
     // If there is a selected NN Id search for a matching NN in the grid
@@ -589,8 +493,7 @@ function draw() {
     }
 
     if(matchingNN){
-      offsetCount++;
-      nnVizPrintNNNeuralNetwork(matchingNN, 5, canvasHeight + (offset * offsetCount), neuralNetDisplayWidth, neuralNetDisplayHeight)
+      nnVizPrintNNNeuralNetwork(matchingNN, 150, canvasHeight + 10, neuralNetDisplayWidth, neuralNetDisplayHeight)
     }
   }
 }
