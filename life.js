@@ -1,14 +1,14 @@
 function requireScript(script) {
   $.ajax({
-      url: script,
-      dataType: "script",
-      async: false,
-      success: function () {
-          console.log("Script loaded: " + script);
-      },
-      error: function () {
-          throw new Error("Error loading script: " + script);
-      }
+    url: script,
+    dataType: "script",
+    async: false,
+    success: function () {
+      console.log("Script loaded: " + script);
+    },
+    error: function () {
+      throw new Error("Error loading script: " + script);
+    }
   });
 }
 requireScript('neuralNetwork.js')
@@ -38,6 +38,7 @@ var seasonalDuration = 1000
 var seasonalTicksPerFrame = 1
 
 var seasonalTicker = 1
+var skipRenderRate = 1 // Draw field when seasonalTicker % skipRenderRate == 0
 
 // gridColRows[COLS][ROWS]
 var gridColRows = null;
@@ -90,8 +91,8 @@ function iterateState() {
   // var seasonalVariation = 0.1
   // var seasonalDuration = 1000
   // var seasonalTicksPerFrame = 1
-  let seasonalAdjustment = seasonalVariation*sin(2*PI*seasonalTicker/seasonalDuration)
-  let localFoodGrowthRate = max(0,foodGrowthRate + seasonalAdjustment)
+  let seasonalAdjustment = seasonalVariation * sin(2 * PI * seasonalTicker / seasonalDuration)
+  let localFoodGrowthRate = max(0, foodGrowthRate + seasonalAdjustment)
 
   for (var col = 0; col < gridColRows.length; col++) {
     for (var row = 0; row < gridColRows[col].length; row++) {
@@ -226,7 +227,7 @@ function iterateStateCellsNeighborhood(cell, foodGrowthRate) {
           alert('This should never happen!!')
       }
 
-      if (targetReproductionCell.wall == 0.0 && 
+      if (targetReproductionCell.wall == 0.0 &&
         (targetReproductionCell.bacteria == 0.0 || bacteriaShouldKillToReproduce)) {
         // just setting both for simplicity
         targetReproductionCell.bacteria = bacteriaCostOfReproduction
@@ -313,21 +314,21 @@ function mouseWheel(event) {
 }
 
 function findCellFromXY(x, y, grid) {
-  try{
+  try {
     if (x >= 0 && y >= 0) {
       if (x < canvasWidth && y < canvasHeight) {
         return gridColRows[int(x / cellSize)][int(y / cellSize)];
       }
     }
   }
-  catch(err){
+  catch (err) {
     print('Warning from findCellFromXY: ' + err)
   }
   return null;
 }
 
-function secondarySetup(){
-  canvasHeight = windowHeight - canvasFooter;
+function secondarySetup() {
+  canvasHeight = windowHeight - canvasFooter - 150;
   canvasWidth = windowWidth - 85;
   cols = int(canvasWidth / cellSize);
   rows = int(canvasHeight / cellSize);
@@ -347,7 +348,7 @@ function secondarySetup(){
 }
 
 function setup() {
-  canvasHeight = windowHeight - canvasFooter;
+  canvasHeight = windowHeight - canvasFooter - 150;
   canvasWidth = windowWidth - 85;
   createCanvas(canvasWidth, canvasHeight + canvasFooter, document.getElementById('myCanvas'));
   frameRate(theFrameRate)
@@ -403,102 +404,104 @@ function draw() {
   else {
     // See if we are mousing over one of the Bacteria Species descriptions as defined below
     let textSpacing = 12
-    if(mouseY > canvasHeight + 39){
+    if (mouseY > canvasHeight + 39) {
       let speciesIndex = int((mouseY - (canvasHeight + 39)) / textSpacing) - 2
       let nnCountsKeys = Object.keys(nnCounts)
-      if(speciesIndex >= 0 && speciesIndex < nnCountsKeys.length){
+      if (speciesIndex >= 0 && speciesIndex < nnCountsKeys.length) {
         hoveredBacterialNeuralNetworkId = nnCountsKeys[speciesIndex]
         hoveredBacterialNeuralNetworkLineage = []
       }
-      else if(speciesIndex < 0){ // Means the mouse is hovering over the mutation count
+      else if (speciesIndex < 0) { // Means the mouse is hovering over the mutation count
         highlightMutatedCells = true;
       }
     }
   }
 
-  background(255);
+  if (seasonalTicker % skipRenderRate == 0) {
+    background(255);
 
-  for (let col = 0; col < gridColRows.length; col++) {
-    for (let row = 0; row < gridColRows[col].length; row++) {
-      let adjust = 0
-      fill(color(
-        gridColRows[col][row].phage * 255,
-        gridColRows[col][row].food * 255,
-        gridColRows[col][row].bacteria * 255));
-      //strokeWeight(drawGridCheckbox.checked() ? cellStroke : 0)
-      strokeWeight(0)
-      if(hoveredBacterialNeuralNetworkId && gridColRows[col][row].bacterialnn && gridColRows[col][row].bacterialnn.nn.id == hoveredBacterialNeuralNetworkId){
-        if(compareArrays(hoveredBacterialNeuralNetworkLineage, gridColRows[col][row].bacterialnn.nn.lineage)){
-          stroke('green')
-        }
-        else{
-          stroke('red')
-        }
-        strokeWeight(2)
-        adjust = 1
-      }
-      else if(highlightMutatedCells && gridColRows[col][row].bacterialnn && gridColRows[col][row].bacterialnn.nn.lineage.length > 0){
-        stroke('yellow')
-        strokeWeight(2)
-        adjust = 1
-      }
-      square((col * cellSize) + adjust, (row * cellSize) + adjust, cellSize - (adjust * 2));
-    }
-  }
-
-  noStroke()
-  strokeWeight(cellStroke)
-  fill('black')
-  let percentThroughTheSeasons = (seasonalTicker%seasonalDuration)/seasonalDuration;
-  let season = 'Spring';
-  
-  if(percentThroughTheSeasons<0.1){
-    season = 'Spring';
-  }
-  else if(percentThroughTheSeasons<0.4){
-    season = 'Summer';
-  }
-  else if(percentThroughTheSeasons<0.6){
-    season = 'Fall';
-  } else if(percentThroughTheSeasons<0.9){
-    season = 'Winter';
-  }
-  
-  text('Season: ' + season, 5, canvasHeight + 10)
-  text('Drawing Type: ' + inputTypes[inputType], 5, canvasHeight + 25)
-
-  // print the counts in human readable form
-  let species_text = 'Mutation Count: ' + nnMutationCount + '\nBacteria Species:'
-  for (var key in nnCounts) {
-    species_text += '\n- ID:' + key + ' - ' + nnCounts[key]
-    if(key == hoveredBacterialNeuralNetworkId){
-      species_text += ' (Selected)'
-    }
-  }
-
-  text(species_text, 5, canvasHeight + 39)
-
-  if(hoveredBacterialNeuralNetworkId){
-    // If there is a selected NN Id search for a matching NN in the grid
-    let matchingNN = null
     for (let col = 0; col < gridColRows.length; col++) {
       for (let row = 0; row < gridColRows[col].length; row++) {
-        if(gridColRows[col][row].bacterialnn && gridColRows[col][row].bacterialnn.nn.id == hoveredBacterialNeuralNetworkId){
-          matchingNN = gridColRows[col][row].bacterialnn.nn
-          if(compareArrays(hoveredBacterialNeuralNetworkLineage, gridColRows[col][row].bacterialnn.nn.lineage)){
-            break;
+        let adjust = 0
+        fill(color(
+          gridColRows[col][row].phage * 255,
+          gridColRows[col][row].food * 255,
+          gridColRows[col][row].bacteria * 255));
+        //strokeWeight(drawGridCheckbox.checked() ? cellStroke : 0)
+        strokeWeight(0)
+        if (hoveredBacterialNeuralNetworkId && gridColRows[col][row].bacterialnn && gridColRows[col][row].bacterialnn.nn.id == hoveredBacterialNeuralNetworkId) {
+          if (compareArrays(hoveredBacterialNeuralNetworkLineage, gridColRows[col][row].bacterialnn.nn.lineage)) {
+            stroke('green')
+          }
+          else {
+            stroke('red')
+          }
+          strokeWeight(2)
+          adjust = 1
+        }
+        else if (highlightMutatedCells && gridColRows[col][row].bacterialnn && gridColRows[col][row].bacterialnn.nn.lineage.length > 0) {
+          stroke('yellow')
+          strokeWeight(2)
+          adjust = 1
+        }
+        square((col * cellSize) + adjust, (row * cellSize) + adjust, cellSize - (adjust * 2));
+      }
+    }
+
+    noStroke()
+    strokeWeight(cellStroke)
+    fill('black')
+    let percentThroughTheSeasons = (seasonalTicker % seasonalDuration) / seasonalDuration;
+    let season = 'Spring';
+
+    if (percentThroughTheSeasons < 0.1) {
+      season = 'Spring';
+    }
+    else if (percentThroughTheSeasons < 0.4) {
+      season = 'Summer';
+    }
+    else if (percentThroughTheSeasons < 0.6) {
+      season = 'Fall';
+    } else if (percentThroughTheSeasons < 0.9) {
+      season = 'Winter';
+    }
+
+    text('Season: ' + season, 5, canvasHeight + 10)
+    text('Drawing Type: ' + inputTypes[inputType], 5, canvasHeight + 25)
+
+    // print the counts in human readable form
+    let species_text = 'Mutation Count: ' + nnMutationCount + '\nBacteria Species:'
+    for (var key in nnCounts) {
+      species_text += '\n- ID:' + key + ' - ' + nnCounts[key]
+      if (key == hoveredBacterialNeuralNetworkId) {
+        species_text += ' (Selected)'
+      }
+    }
+
+    text(species_text, 5, canvasHeight + 39)
+
+    if (hoveredBacterialNeuralNetworkId) {
+      // If there is a selected NN Id search for a matching NN in the grid
+      let matchingNN = null
+      for (let col = 0; col < gridColRows.length; col++) {
+        for (let row = 0; row < gridColRows[col].length; row++) {
+          if (gridColRows[col][row].bacterialnn && gridColRows[col][row].bacterialnn.nn.id == hoveredBacterialNeuralNetworkId) {
+            matchingNN = gridColRows[col][row].bacterialnn.nn
+            if (compareArrays(hoveredBacterialNeuralNetworkLineage, gridColRows[col][row].bacterialnn.nn.lineage)) {
+              break;
+            }
           }
         }
       }
-    }
 
-    if(matchingNN){
-      nnVizPrintNNNeuralNetwork(matchingNN, 150, canvasHeight + 10, neuralNetDisplayWidth, neuralNetDisplayHeight)
+      if (matchingNN) {
+        nnVizPrintNNNeuralNetwork(matchingNN, 150, canvasHeight + 10, neuralNetDisplayWidth, neuralNetDisplayHeight)
+      }
     }
   }
 }
 
-function printBacterialNNScenarios(bnn){
+function printBacterialNNScenarios(bnn) {
   print('Bacterial NN Scenarios')
   print('ID: ' + bnn.nn.id)
   print('Lineage: ' + bnn.nn.lineage)
@@ -517,9 +520,9 @@ function printBacterialNNScenarios(bnn){
 
 }
 
-function printBacterialNNScenario(scenarioName, bnn, food, health, isInfected, numNeighbors, numInfectedNeighbors){
-  print('Bacterial NN Scenario - '+scenarioName+'\ninputs: food[' + food + '], health[' + health + '], isInfected[' + isInfected + '], numNeighbors[' + numNeighbors + '], numInfectedNeighbors[' + numInfectedNeighbors + ']')
-  outputs = bnn.executeNN(food, health, isInfected, numNeighbors/9, numInfectedNeighbors/9)
+function printBacterialNNScenario(scenarioName, bnn, food, health, isInfected, numNeighbors, numInfectedNeighbors) {
+  print('Bacterial NN Scenario - ' + scenarioName + '\ninputs: food[' + food + '], health[' + health + '], isInfected[' + isInfected + '], numNeighbors[' + numNeighbors + '], numInfectedNeighbors[' + numInfectedNeighbors + ']')
+  outputs = bnn.executeNN(food, health, isInfected, numNeighbors / 9, numInfectedNeighbors / 9)
   print('outputs: eatingRate[' + outputs[0] + '], costOfReproduction[' + outputs[1] + '], chanceOfReproduction[' + outputs[2] + '], shouldKillToReproduce[' + outputs[3] + ']')
 }
 
