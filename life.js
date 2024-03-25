@@ -498,7 +498,9 @@ function draw() {
       }
 
       if (matchingNN) {
-        nnVizPrintNNNeuralNetwork(matchingNN, 150, canvasHeight + 10, neuralNetDisplayWidth, neuralNetDisplayHeight)
+        nnVizX = 150
+        nnVizY = canvasHeight + 10
+        nnVizPrintNNNeuralNetwork(matchingNN, nnVizX, nnVizY, canvasWidth - nnVizX, canvasFooter)
       }
     }
   }
