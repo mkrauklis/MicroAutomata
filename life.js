@@ -36,6 +36,7 @@ var phageChanceOfSpread = 0.9
 var seasonalVariation = 0.1
 var seasonalDuration = 1000
 var seasonalTicksPerFrame = 1
+var trackNeuralNetHistory = true
 
 var seasonalTicker = 1
 var skipRenderRate = 1 // Draw field when seasonalTicker % skipRenderRate == 0
@@ -102,8 +103,10 @@ function iterateState() {
     }
   }
 
-  nnVizUpdateNNHistory()
-  nnVizDrawNNHistoryGraph('nnHistoryGraph')
+  if(trackNeuralNetHistory) {
+    nnVizUpdateNNHistory()
+    nnVizDrawNNHistoryGraph('nnHistoryGraph')
+  }
 }
 
 function getNeighborhood(col, row, gridColRows) {
