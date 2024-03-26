@@ -499,7 +499,7 @@ function draw() {
 
       if (matchingNN) {
         nnVizX = 150
-        nnVizY = canvasHeight + 10
+        nnVizY = canvasHeight + 5
         nnVizPrintNNNeuralNetwork(matchingNN, nnVizX, nnVizY, canvasWidth - nnVizX, canvasFooter)
       }
     }
